@@ -111,6 +111,24 @@ Still Dirac, in terms of functionalities.
 
 
 ---
+layout: side-title
+color: gray-light
+title: Architecture
+align: cm-lm
+titlewidth: is-3
+---
+
+
+:: title ::
+
+# Architecture diagram
+
+:: content ::
+
+<img id="D_X" src="/public/images/architecture.png" class="mx-auto"> </img>
+
+
+---
 layout: top-title
 color: gray-light
 align: c
@@ -140,39 +158,42 @@ Current production and only supported version, used by all DIRAC installations
 
 
 <SpeechBubble position="l" color='amber' shape="round"  v-drag="[780,265,140,175]">
-DIRAC v9 and DiracX 0.1 will be released together.
+DIRAC v9 and DiracX 0.0.1 will be released together.
 </SpeechBubble>
 
 ---
-layout: top-title
+layout: top-title-two-cols
 color: gray-light
-align: c
+align: c-lm-lm
 title: DiracX v0.0.1
 ---
 
 :: title ::
 
-# Getting to 0.0.1 -- [road map](https://github.com/DIRACGrid/diracx/blob/main/docs/ROADMAP.MD)
+# Getting to **DiracX 0.0.1** -- [road map](https://github.com/DIRACGrid/diracx/blob/main/docs/ROADMAP.MD)
 
-:: content ::
+:: left ::
 
 * First release contains:
     * All service/client underpinnings
     * Extension support
     * JobStateUpdateHandler can be replaced by DiracX
 
+:: right ::
 
-* [ ] Finish any DIRAC v9 cleanups
-* [ ] Get LHCbDIRAC certification running stably with DIRAC v9
-* [ ] Finish legacy adapter for JobStateUpdateClient
-* [ ] Admin VO
-* [ ] Ensure the helm chart is stable for updates
-* [ ] Make sure the docs are complete
+**To complete before declaring that is "ready"**
+
+- [ ] Finish any DIRAC v9 cleanups
+- [ ] Get LHCbDIRAC certification running stably with DIRAC v9
+- [ ] Finish legacy adapter for JobStateUpdateClient
+- [ ] Admin VO
+- [ ] Ensure the helm chart is stable for updates
+- [ ] Make sure the docs are complete
 
 ---
 layout: top-title
 color: gray-light
-align: c
+align: cm
 title: Status
 ---
 
@@ -194,13 +215,13 @@ title: Status
 ---
 layout: top-title
 color: gray-light
-align: c
+align: cm
 title: v9
 ---
 
 :: title ::
 
-# And which functionalities are in DIRAC v9?
+# And which functionalities are in **DIRAC v9**?
 
 :: content ::
 
@@ -209,7 +230,321 @@ title: v9
 - Using DIRAC's RSS (Resource Status System) is mandatory
 - DIRAC's ARC and ARC6 Computing Element are not supported anymore
 
+&nbsp;
+&nbsp;
+
+
 Basically: no new functionalities, but many changes for DiracX. Lots of database schema changes.
+
+
+---
+layout: section
+color: cyan-light
+title: security
+---
+
+# Something about security
+
+---
+layout: top-title-two-cols
+color: gray-light
+align: c-lm-lm
+title: tokens
+---
+
+:: title ::
+
+# What are proxies and/or tokens needed for?
+
+:: left ::
+
+## Internal to DIRAC and DiracX:
+
+- For **Verifying a user's identity** (or a service identity)
+  - **DIRAC** uses only X509 proxies and certificates to verify identities 
+  - **DiracX** uses only tokens ([link to security model](https://github.com/DIRACGrid/diracx/blob/main/security_model.md))
+
+:: right ::
+
+## For interacting with external resources:
+
+- **Submitting pilots**: The computing elements right now prefer the tokens
+  - this is in DIRAC v8 since long time
+- **Data access**: at least in WLCG, VOMS proxies. One day, will be token
+  - discussions later today
+
+---
+layout: top-title
+color: gray-light
+align: c
+title: tokens-2
+---
+
+:: title ::
+
+# What are proxies and/or tokens needed for? /2
+
+:: content ::
+
+For **Identity (community membership)**: 
+
+- **DIRAC** interfaces with VOMS and with OAuth2 Identity Providers
+  - These are effectively hard dependencies since we are in the Grid world...
+- **DiracX** interfaces with OAuth2 Identity Providers 
+
+&nbsp;
+
+
+Notes:
+- **VOMS** is inside IAM now
+ - See [this pres](https://indico.cern.ch/event/1341205/contributions/5972952/attachments/2881641/5048712/auth_now_then.pdf) for the DIRAC migration VOMS->IAM
+- We tried IdPs: IAM, EGI Check-in
+  - Check-in tokens (for compute) needed some discussions before becoming useful
+  - VOMS -> Check-in synchronization?
+
+---
+layout: top-title-two-cols
+color: gray-light
+align: c-cm-cm
+title: proxies+tokens
+columns: is-2
+---
+
+:: title ::
+
+# DIRAC&DiracX internal verification of users' identities
+
+:: left :: 
+
+DiracX: Authorization with "standard" <a href="https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow" class="text-blue-600 hover:underline">Authorization Code Flow</a> redirecting to IdP
+
+```mermaid {theme: 'forest', scale: 0.45}
+%%{init: { 'theme': 'forest' }}%%
+sequenceDiagram
+    create actor U as User
+    create participant DiracX
+    U->>DiracX: Login
+    DiracX->>U: Redirect
+    create participant External_IdP
+    U->>External_IdP: 
+    destroy External_IdP
+    External_IdP->>DiracX: ID token
+    DiracX->>U: DiracX token
+```
+
+<AdmonitionType type='Note' >
+DiracX mints its own tokens, which are not the same tokens used for the Grid endpoints
+</AdmonitionType>
+
+
+:: right ::
+
+DIRAC+DiracX: working with proxies and tokens
+
+```mermaid {theme: 'forest', scale: 0.40}
+%%{init: { 'theme': 'forest' }}%%
+sequenceDiagram
+    create actor U as User
+    create participant dirac-proxy-init
+    U->>dirac-proxy-init: 
+    create participant VOMS
+    dirac-proxy-init->>VOMS: 
+    destroy VOMS
+    VOMS->>dirac-proxy-init: VOMS proxy
+    create participant DIRAC
+    dirac-proxy-init->>DIRAC: exchange proxy for token
+    destroy DIRAC
+    DIRAC->>dirac-proxy-init: DiracX token
+    dirac-proxy-init->>U: proxy+token bundle
+    U->>DIRAC_service: proxy
+    U->>DiracX: token
+```
+
+<Line :x1=420 :y1=120 :x2=420 :y2=520 :width=1 />
+
+---
+layout: section
+color: cyan-light
+title: toV9
+---
+
+# From DIRAC v8 to v9+0.0.1
+
+---
+layout: top-title-two-cols
+color: gray-light
+align: c-lm-lm
+title: Deployments
+---
+
+:: title :: 
+
+# DiracX is deployed on Kubernetes
+
+:: left ::
+
+Kubernetes - <devicon-kubernetes class="text-3xl align-middle inline-block mx-0"></devicon-kubernetes> Standard to define a distributed system
+
+<ul class="text-sm">
+  <li>Separates infrastructure from applications
+    <ul>
+      <li class="text-xs">"Please IT department(/cloud provider) run this for me"</li>
+    </ul>
+  </li>
+</ul>
+
+
+Helm <devicon-helm class="text-3xl align-middle inline-block mx-0"></devicon-helm> gives the ability:
+
+<ul class="text-sm">
+  <li>to parameterise</li>
+  <li>to distribute a kubernetes config</li>
+</ul>
+
+:: right ::
+
+<ul class="text-sm">
+  <li><a href="https://github.com/DIRACGrid/diracx-charts">DiracX Helm chart</a>
+    <ul>
+      <li>If your institution provides a kubernetes service: use it</li>
+      <li>If you work with public clouds: use their container services</li>
+      <li>Alternatively, follow these <a href="https://github.com/DIRACGrid/diracx-charts/tree/master/k3s">k3s instructions</a></li>
+    </ul>
+  </li>
+  <li>Used for:
+    <ul>
+      <li>DiracX testing (GitHub actions)</li>
+      <li>Local development instance</li>
+      <li>Running a demo instance</li>
+      <li>Running test and productions instances</li>
+    </ul>
+  </li>
+</ul>
+
+
+<StickyNote color="gray-light" textAlign="center" width="260px" title="What to run on K8" v-drag="[175,430,600,100]">
+The helm charts provide "everything", inclusing MySQL and Opensearch. You are in no obligation to run all available services on K8
+</StickyNote>
+
+
+
+---
+layout: top-title
+color: gray-light
+align: c
+title: v9-migration
+---
+
+:: title ::
+
+# What is in practice needed to migrate to v9?
+
+:: content ::
+
+Use this [skeleton](https://codimd.web.cern.ch/5C44tUJTReacVOcIn_0Bfg#), but first of all:
+
+- You need an IdP (IAM...) -- you probably already have one instance!
+  - Probably one for every VO you host (?)
+- Register a DiracX `client` in the IdP, will be needed in order for DiracX (server) to authenticate
+- if you have a VODIRAC extension:
+  - update it considering the many changes.
+  - code an "empty" `vodiracx` extension
+- if you have a WebAppDIRAC extension:
+  - code an "empty" `vodiracx-web` extension
+- have a k8 project ready for hosting (vo)diracx
+- deploy (vo)diracx 
+
+---
+layout: top-title
+color: gray-light
+align: c
+title: FutureExtensions
+---
+
+:: title ::
+
+# DiracX extensions
+
+:: content ::
+
+<span class="bg-cyan-100 text-cyan-600 text-center p-4 border-l-6 border-2 border-cyan-400 rounded-lg pl-8 pr-8 w-full block">
+    By now, we know that it is sometimes necessary to extend all Dirac(X) components 
+    
+    DiracX aims to provide an easy way to do so.
+</span>
+
+
+```toml
+# entrypoints in pyproject.toml
+
+[project.entry-points."diracx.db.sql"]
+AuthDB = "diracx.db.sql:AuthDB"
+JobDB = "<extension>.db.sql:ExtendedJobDB"
+```
+
+<SpeechBubble position="t" color='amber' shape="round"  v-drag="[400,310,220,140]">
+For DiracX and DiracX-Web we already provide reference extensions
+</SpeechBubble>
+
+
+---
+layout: top-title
+color: gray-light
+align: c
+title: Migration
+---
+
+:: title ::
+
+### Business continuity for DIRAC communities is our top priority
+Services of DIRAC v9 and DiracX will need to live together for some time
+
+
+:: content ::
+
+<Arrow x1="300" y1="170" x2="370" y2="170" />
+<Line :x1=345 :y1=200 :x2=345 :y2=500 :width=1 />
+
+<Arrow x1="610" y1="170" x2="680" y2="170" />
+<Line :x1=633 :y1=200 :x2=633 :y2=500 :width=1 />
+
+<div style="display: flex; align-items: center; justify-content: center;">
+    <img id="D_X" src="/public/images/legacy_before_Adaptor.png" class="mx-auto w-1/4"> </img>
+    <img id="D_Ad" src="/public/images/legaxyAdaptor.png" class="mx-auto w-1/4"> </img>
+    <img id="X" src="/public/images/legacy_after_Adaptor.png" class="mx-auto w-1/4"> </img>
+</div>
+
+<SpeechBubble position="r" color='cyan' shape="round"  v-drag="[100,350,40,60]">
+1
+</SpeechBubble>
+
+<SpeechBubble position="r" color='cyan' shape="round"  v-drag="[370,350,40,60]">
+2
+</SpeechBubble>
+
+<SpeechBubble position="r" color='cyan' shape="round"  v-drag="[660,350,40,60]">
+3
+</SpeechBubble>
+
+<SpeechBubble position="t" color='amber' shape="round"  v-drag="[160,350,120,180]">
+DIRAC and DiracX share the databases
+</SpeechBubble>
+
+<SpeechBubble position="t" color='amber' shape="round"  v-drag="[430,350,160,180]">
+A legacy adaptor moves traffic from DIRAC to DiracX services
+</SpeechBubble>
+
+<SpeechBubble position="t" color='amber' shape="round"  v-drag="[720,350,120,140]">
+DIRAC services can be removed
+</SpeechBubble>
+
+---
+layout: section
+color: cyan-light
+title: Demos
+---
+
+# Demonstrations
 
 
 ---
@@ -224,9 +559,8 @@ align: lm
 
 # DiracX Web API
 
-
 <AdmonitionType type='caution' >
-What is on the right is the certification Web API, loaded live. Use with caution!
+What is on the right is the certification Web API (VOs: `dteam` and `gridpp`), loaded live. Use with caution!
 </AdmonitionType>
 
 DIRAC Web APIs with <devicon-fastapi-wordmark class="text-7xl align-middle inline-block mx-0"></devicon-fastapi-wordmark>
@@ -327,144 +661,6 @@ What is on the left is the certification WebApp, loaded live. Use with caution!
 </AdmonitionType>
 
 ---
-layout: top-title-two-cols
-color: gray-light
-align: c-lm-lm
-title: Deployments
----
-
-:: title :: 
-
-# Deployments
-
-:: left ::
-
-Kubernetes - <devicon-kubernetes class="text-3xl align-middle inline-block mx-0"></devicon-kubernetes> Standard to define a distributed system
-
-<ul class="text-sm">
-  <li>Separates infrastructure from applications
-    <ul>
-      <li class="text-xs">"Please IT department(/cloud provider) run this for me"</li>
-    </ul>
-  </li>
-</ul>
-
-
-Helm <devicon-helm class="text-3xl align-middle inline-block mx-0"></devicon-helm> gives the ability:
-
-<ul class="text-sm">
-  <li>to parameterise</li>
-  <li>to distribute a kubernetes config</li>
-</ul>
-
-:: right ::
-
-<ul class="text-sm">
-  <li><a href="https://github.com/DIRACGrid/diracx-charts">DiracX Helm chart</a>
-    <ul>
-      <li>If your institution provides a kubernetes service: use it</li>
-      <li>If you work with public clouds: use their container services</li>
-      <li>Alternatively, follow these <a href="https://github.com/DIRACGrid/diracx-charts/tree/master/k3s">k3s instructions</a></li>
-    </ul>
-  </li>
-  <li>Used for:
-    <ul>
-      <li>DiracX testing (GitHub actions)</li>
-      <li>Local development instance</li>
-      <li>Running a demo instance</li>
-      <li>Running the test instance you saw in the previous slides</li>
-      <li>Soon: running production instances</li>
-    </ul>
-  </li>
-</ul>
-
-
-
----
-layout: top-title
-color: gray-light
-align: c
-title: Migration
----
-
-:: title ::
-
-### Business continuity for DIRAC communities is our top priority
-Services of DIRAC v9 and DiracX will need to live together for some time
-
-
-:: content ::
-
-<Arrow x1="300" y1="170" x2="370" y2="170" />
-<Line :x1=345 :y1=200 :x2=345 :y2=500 :width=1 />
-
-<Arrow x1="610" y1="170" x2="680" y2="170" />
-<Line :x1=633 :y1=200 :x2=633 :y2=500 :width=1 />
-
-<div style="display: flex; align-items: center; justify-content: center;">
-    <img id="D_X" src="/public/images/legacy_before_Adaptor.png" class="mx-auto w-1/4"> </img>
-    <img id="D_Ad" src="/public/images/legaxyAdaptor.png" class="mx-auto w-1/4"> </img>
-    <img id="X" src="/public/images/legacy_after_Adaptor.png" class="mx-auto w-1/4"> </img>
-</div>
-
-<SpeechBubble position="r" color='cyan' shape="round"  v-drag="[100,350,40,60]">
-1
-</SpeechBubble>
-
-<SpeechBubble position="r" color='cyan' shape="round"  v-drag="[370,350,40,60]">
-2
-</SpeechBubble>
-
-<SpeechBubble position="r" color='cyan' shape="round"  v-drag="[660,350,40,60]">
-3
-</SpeechBubble>
-
-<SpeechBubble position="t" color='amber' shape="round"  v-drag="[160,350,120,180]">
-DIRAC and DiracX share the databases
-</SpeechBubble>
-
-<SpeechBubble position="t" color='amber' shape="round"  v-drag="[430,350,160,180]">
-A legacy adaptor moves traffic from DIRAC to DiracX services
-</SpeechBubble>
-
-<SpeechBubble position="t" color='amber' shape="round"  v-drag="[720,350,120,140]">
-DIRAC services can be removed
-</SpeechBubble>
-
----
-layout: top-title
-color: gray-light
-align: c
-title: FutureExtensions
----
-
-:: title ::
-
-# DiracX extensions
-
-:: content ::
-
-<span class="bg-cyan-100 text-cyan-600 text-center p-4 border-l-6 border-2 border-cyan-400 rounded-lg pl-8 pr-8 w-full block">
-    By now, we know that it is sometimes necessary to extend all Dirac(X) components 
-    
-    DiracX aims to provide an easy way to do so.
-</span>
-
-
-```toml
-# entrypoints in pyproject.toml
-
-[project.entry-points."diracx.db.sql"]
-AuthDB = "diracx.db.sql:AuthDB"
-JobDB = "<extension>.db.sql:ExtendedJobDB"
-```
-
-<SpeechBubble position="t" color='amber' shape="round"  v-drag="[400,310,220,140]">
-For DiracX and DiracX-Web we already provide reference extensions
-</SpeechBubble>
-
-
----
 layout: top-title
 color: gray-light
 align: c
@@ -482,135 +678,10 @@ title: LHCb
 ---
 layout: section
 color: cyan-light
-title: security
+title: Conclusions
 ---
 
-# Something about security
-
----
-layout: top-title
-color: gray-light
-align: c
-title: tokens
----
-
-:: title ::
-
-# What are proxies and/or tokens needed for?
-
-:: content ::
-
-- **Identity (community membership)**: "in transition"
-- **Submitting pilots**: The computing elements right now prefer the tokens
-- **Data access**: at least in WLCG, proxies. One day, will be token
-- **Verifying a user's identity** (internally to Dirac): 
-    - **DiracX** uses only tokens ([link to security model](https://github.com/DIRACGrid/diracx/blob/main/security_model.md))
-    - **DIRAC** uses only X509 proxies and certificates to verify identities 
-
-
----
-layout: top-title-two-cols
-color: gray-light
-align: c-cm-cm
-title: proxies+tokens
-columns: is-2
----
-
-:: title ::
-
-# More on proxies and tokens
-
-:: left :: 
-
-DiracX: Authorization with "standard" <a href="https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow" class="text-blue-600 hover:underline">Authorization Code Flow</a> redirecting to IdP
-
-```mermaid {theme: 'forest', scale: 0.45}
-%%{init: { 'theme': 'forest' }}%%
-sequenceDiagram
-    create actor U as User
-    create participant DiracX
-    U->>DiracX: Login
-    DiracX->>U: Redirect
-    create participant External_IdP
-    U->>External_IdP: 
-    destroy External_IdP
-    External_IdP->>DiracX: ID token
-    DiracX->>U: DiracX token
-```
-
-<AdmonitionType type='Note' >
-DiracX mints its own tokens, which are not the same tokens used for the Grid endpoints
-</AdmonitionType>
-
-
-:: right ::
-
-DIRAC+DiracX: working with proxies and tokens
-
-```mermaid {theme: 'forest', scale: 0.40}
-%%{init: { 'theme': 'forest' }}%%
-sequenceDiagram
-    create actor U as User
-    create participant dirac-proxy-init
-    U->>dirac-proxy-init: 
-    create participant VOMS
-    dirac-proxy-init->>VOMS: 
-    destroy VOMS
-    VOMS->>dirac-proxy-init: VOMS proxy
-    create participant DIRAC
-    dirac-proxy-init->>DIRAC: exchange proxy for token
-    destroy DIRAC
-    DIRAC->>dirac-proxy-init: DiracX token
-    dirac-proxy-init->>U: proxy+token bundle
-    U->>DIRAC_service: proxy
-    U->>DiracX: token
-```
-
-<Line :x1=420 :y1=120 :x2=420 :y2=520 :width=1 />
-
-
----
-layout: side-title
-color: gray-light
-title: Architecture
-align: cm-lm
-titlewidth: is-3
----
-
-
-:: title ::
-
-# Architecture diagram
-
-:: content ::
-
-<img id="D_X" src="/public/images/architecture.png" class="mx-auto"> </img>
-
-
----
-layout: top-title
-color: gray-light
-align: c
-title: v9-migration
----
-
-:: title ::
-
-# What is in practice needed to migrate to v9?
-
-:: content ::
-
-Use this [skeleton](https://codimd.web.cern.ch/5C44tUJTReacVOcIn_0Bfg#), and first of all:
-
-- The SecurityLoggingService is no more. Use [centralized logging](https://dirac.readthedocs.io/en/latest/AdministratorGuide/ServerInstallations/centralizedLogging.html#logstash-and-elk-configurations) instead.
-- JobParameters need to be stored in OpenSearch
-- [Install and use RSS](https://dirac.readthedocs.io/en/latest/AdministratorGuide/Systems/ResourceStatus/install.html)
-- Register a DiracX `client` in the IdP, will be needed in order for DiracX to authenticate
-- if you have a DIRAC extension, update it considering the many changes.
-- if you have a DIRAC extension, code an empty `vodiracx` extension
-- if you have a WebAppDIRAC extension, code an empty `vodiracx-web` extension
-- have a k8 project ready for hosting (vo)diracx
-- deploy (vo)diracx 
+# To conclude
 
 ---
 layout: side-title
@@ -667,34 +738,6 @@ diracx-charts/run_demo.sh # this is run for each and every commit in Github Acti
 <!-- 
 - You might have seen that we set up 2 VOs: **gridpp** and **dteam**. For **dteam** we do not import all members, but if you want to...
 -->
-
-
----
-layout: top-title
-color: gray-light
-align: c
-title: CVMFS
----
-
-:: title :: 
-
-CVMFS: consolidation and organization
-
-:: content ::
-
-NB: DIRAC pilots do not depend on CVMFS, but its presence is of great help
-
-- `/cvmfs/dirac.egi.eu` is the CVMFS repo for Dirac-related business
-  - Managed at RAL (stability seems better...?)
-  - DIRAC ready-to-source releases are added here by the CI when created
-  - DIRAC pilot code
-- `/cvmfs/grid.cern.ch` is the default repo used for CAs and CRLs, voms-related
-pointers
-  - De-facto source of truth for security files
-  - `vomsdir` and `vomses` can be added here for any VO
-- Pilots use it for quickly setting up the releases
-  - Extensions can define a different (list of) CVMFS location(s) in `cvmfs_locations`, but
-the CVMFS structure should be the same
 
 
 ---
@@ -771,3 +814,37 @@ title: credits/people
     <strong>Questions?</strong>
 </div>
 
+---
+layout: section
+color: cyan-light
+title: Backup
+---
+
+# Backup
+
+---
+layout: top-title
+color: gray-light
+align: c
+title: CVMFS
+---
+
+:: title :: 
+
+# CVMFS: consolidation and organization
+
+:: content ::
+
+NB: DIRAC pilots do not depend on CVMFS, but its presence is of great help
+
+- `/cvmfs/dirac.egi.eu` is the CVMFS repo for Dirac-related business
+  - Managed at RAL (stability seems better...?)
+  - DIRAC ready-to-source releases are added here by the CI when created
+  - DIRAC pilot code
+- `/cvmfs/grid.cern.ch` is the default repo used for CAs and CRLs, voms-related
+pointers
+  - De-facto source of truth for security files
+  - `vomsdir` and `vomses` can be added here for any VO
+- Pilots use it for quickly setting up the releases
+  - Extensions can define a different (list of) CVMFS location(s) in `cvmfs_locations`, but
+the CVMFS structure should be the same
