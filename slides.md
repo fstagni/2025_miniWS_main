@@ -246,9 +246,9 @@ title: security
 # Something about security
 
 ---
-layout: top-title-two-cols
+layout: top-title
 color: gray-light
-align: c-lm-lm
+align: c
 title: tokens
 ---
 
@@ -256,51 +256,13 @@ title: tokens
 
 # What are proxies and/or tokens needed for?
 
-:: left ::
+:: content ::
 
 ## Internal to DIRAC and DiracX:
 
 - For **Verifying a user's identity** (or a service identity)
   - **DIRAC** uses only X509 proxies and certificates to verify identities 
   - **DiracX** uses only tokens ([link to security model](https://github.com/DIRACGrid/diracx/blob/main/security_model.md))
-
-:: right ::
-
-## For interacting with external resources:
-
-- **Submitting pilots**: The computing elements right now prefer the tokens
-  - this is in DIRAC v8 since long time
-- **Data access**: at least in WLCG, VOMS proxies. One day, will be token
-  - discussions later today
-
----
-layout: top-title
-color: gray-light
-align: c
-title: tokens-2
----
-
-:: title ::
-
-# What are proxies and/or tokens needed for? /2
-
-:: content ::
-
-For **Identity (community membership)**: 
-
-- **DIRAC** interfaces with VOMS and with OAuth2 Identity Providers
-  - These are effectively hard dependencies since we are in the Grid world...
-- **DiracX** interfaces with OAuth2 Identity Providers 
-
-&nbsp;
-
-
-Notes:
-- **VOMS** is inside IAM now
- - See [this pres](https://indico.cern.ch/event/1341205/contributions/5972952/attachments/2881641/5048712/auth_now_then.pdf) for the DIRAC migration VOMS->IAM
-- We tried IdPs: IAM, EGI Check-in
-  - Check-in tokens (for compute) needed some discussions before becoming useful
-  - VOMS -> Check-in synchronization?
 
 ---
 layout: top-title-two-cols
@@ -361,6 +323,55 @@ sequenceDiagram
 ```
 
 <Line :x1=420 :y1=120 :x2=420 :y2=520 :width=1 />
+
+---
+layout: top-title
+color: gray-light
+align: c
+title: tokens-3
+---
+
+:: title ::
+
+# What are proxies and/or tokens needed for? /2
+
+:: content ::
+
+For **interacting with external resources**:
+
+- **Submitting pilots**: The computing elements right now prefer the tokens
+  - this is in DIRAC v8 since long time
+- **Data access**: at least in WLCG, VOMS proxies. One day, will be token
+  - discussions later today
+
+---
+layout: top-title
+color: gray-light
+align: c
+title: tokens-3
+---
+
+:: title ::
+
+# What are proxies and/or tokens needed for? /3
+
+:: content ::
+
+For **Identity (community membership)**: 
+
+- **DIRAC** interfaces with VOMS and with OAuth2 Identity Providers
+  - These are effectively hard dependencies since we are in the Grid world...
+- **DiracX** interfaces with OAuth2 Identity Providers 
+
+&nbsp;
+
+
+Notes:
+- **VOMS** is inside IAM now
+ - See [this pres](https://indico.cern.ch/event/1341205/contributions/5972952/attachments/2881641/5048712/auth_now_then.pdf) for the DIRAC migration VOMS->IAM
+- We tried IdPs: IAM, EGI Check-in
+  - Check-in tokens (for compute) needed some discussions before becoming useful
+  - VOMS -> Check-in synchronization?
 
 ---
 layout: section
@@ -809,6 +820,43 @@ loop: true
 speed: 1.0
 title: credits/people
 ---
+
+
+<div class="grid text-size-4 grid-cols-3 w-3/4 gap-y-10 auto-rows-min ml-auto mr-auto">
+    <div class="grid-item text-center mr-0- col-span-3">
+        <strong>People</strong><br> 
+    </div>
+    <div class="grid-item text-right mr-4 col-span-1">
+        <strong>Current Developers, maintainers, supporters</strong>
+    </div>
+    <div class="grid-item col-span-2">
+        Chris Burr <i>CERN, LHCb</i><br/>
+        Christophe Haen <i>CERN, LHCb</i><br/>
+        Alexandre Boyer <i>CERN, LHCb</i><br/>
+        Natthan Piggoux <i>LUPM (FR), CTA</i><br/>
+        Cedric Serfon <i>Brookhaven National Laboratory (US), Belle2</i><br/>
+        Ryunosuke O'Neil <i>CERN, LHCb</i><br/>
+        Daniela Bauer <i>Imperial college (UK), GridPP</i><br/>
+        Simon Fayer <i>Imperial college (UK), GridPP</i><br/>
+        Janusz Martyniak <i>Imperial college (UK), GridPP</i><br/>
+        Xiaomei Zhang <i>Beijing, Inst. High Energy Phys. (CN), Juno</i><br/>
+        Luisa Arrabito <i>LUPM (FR), CTA</i><br/>
+        André Sailer <i>CERN</i><br/>
+        Jorge Lisa Laborda <i>Univ. of Valencia and CSIC (ES), LHCb</i><br/>
+        Bertrand Rigaud <i>IN2P3 (FR)</i>
+    </div>
+    <div class="grid-item text-right mr-4 col-span-1">
+        <strong>Project lead</strong>
+    </div>
+    <div class="grid-item col-span-2">
+        Federico Stagni <i>CERN, LHCb</i><br/>
+        Andrei Tsaregorotsev <i>CPPM (FR), EGI and LHCb</i>
+    </div>
+</div>
+
+&nbsp;
+&nbsp;
+&nbsp;
 
 <div class="grid-item col-span-3 text-center mt-180px mb-auto font-size-1.5rem">
     <strong>Questions?</strong>
