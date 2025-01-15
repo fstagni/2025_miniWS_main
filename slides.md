@@ -672,21 +672,6 @@ What is on the left is the certification WebApp, loaded live. Use with caution!
 </AdmonitionType>
 
 ---
-layout: top-title
-color: gray-light
-align: c
-title: LHCb
----
-
-:: title ::
-
-# LHCbDIRAC and LHCbDiracX
-
-:: content ::
-
-# show extensions "live"
-
----
 layout: section
 color: cyan-light
 title: Conclusions
@@ -734,7 +719,7 @@ diracx-charts/run_demo.sh # this is run for each and every commit in Github Acti
   <li><strong>hackathons</strong>: we have been doing 2-days DiracX hackathons every quarter, at CERN
     <ul class="text-xs ml-4">
       <li>--> <a href="https://indico.cern.ch/event/1458873/" class="text-blue-600 hover:underline">Last one yesterday and the day before</a></li>
-      <li>--> <a href="https://indico.cern.ch/event/1443765/" class="text-blue-600 hover:underline">Next will be in April</a></li>
+      <li>--> <a href="https://indico.cern.ch/event/1501369/" class="text-blue-600 hover:underline">Next will be 28 and 29 April -- you can register even now!</a></li>
     </ul>
   </li>
   <li><strong>workshops</strong>: once per year, more or less
